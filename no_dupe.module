@@ -1,0 +1,43 @@
+<?php
+
+/**
+ * Implements hook_entity_presave
+ */
+function no_dupe_entity_presave($entity, $type) {
+  // Do nothing for edits
+  if ($type == 'node' && isset($entity->nid)) {
+    return;
+  } else if ($type == 'comment' && isset($entity->cid)) {
+    return;
+  }
+
+  switch($type) {
+    case 'node':
+      $query = "SELECT COUNT(*) FROM {node} WHERE title = :val1 AND uid = :uid AND created BETWEEN :min AND :max";
+      $val1 = $entity->title;
+      break;
+
+    case 'comment':
+      $query = "SELECT COUNT(*) FROM {comment} WHERE subject = :val1 AND uid = :uid AND created BETWEEN :min AND :max";
+      $val1 = $entity->subject; // Check this!
+      break;
+
+    default:
+      return; // Not a supported type, do nothing!
+  }
+
+  $db = db_query(
+    $query,
+    array(
+      ':val1' => $val1,
+      ':uid' => $entity->uid,
+      ':min' => strtotime('-15 minutes'),
+      ':max' => strtotime('+15 minutes')
+    )
+  );
+
+  if ($db->fetchField() > 0) {
+    throw new Exception('Error saving node: Duplicate content detected');
+  }
+}
+

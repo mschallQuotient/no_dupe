@@ -1,0 +1,6 @@
+name = No Dupe!
+description = Prevents duplicate nodes from being submitted by overzealous clickers.
+core = 7.x
+package = Other
+version = "7.x-0.1-beta"
+
